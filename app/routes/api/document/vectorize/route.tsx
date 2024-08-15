@@ -116,7 +116,8 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 
 		// add ids and make it the same length as the docOutput
 		const result = await vectorStore.addDocuments(docOutput);
-		const document = await db
+
+		const document = await context.db
 			.insert(documents)
 			.values({
 				documentId: documentId,
@@ -127,10 +128,13 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 			})
 			.returning();
 
-		return json({ document: document[0] });
+		return json({ document: document[0] }, 201);
 	} catch (error) {
-		return json({
-			error: error.message,
-		});
+		return json(
+			{
+				error: error.message,
+			},
+			400,
+		);
 	}
 };

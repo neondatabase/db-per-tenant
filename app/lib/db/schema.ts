@@ -1,4 +1,4 @@
-import type { InferSelectModel } from "drizzle-orm";
+import { relations, type InferSelectModel } from "drizzle-orm";
 import {
 	boolean,
 	index,
@@ -56,32 +56,6 @@ export type Document = InferSelectModel<typeof documents>;
 
 export const insertDocumentSchema = createInsertSchema(documents);
 export const selectDocumentSchema = createSelectSchema(documents);
-
-export const chats = pgTable(
-	"chats",
-	{
-		id: serial("id").primaryKey(),
-		chatId: varchar("chat_id", { length: 256 }).notNull().unique(),
-		userId: serial("user_id")
-			.notNull()
-			.references(() => users.id, { onDelete: "cascade" }),
-		documentId: serial("document_id")
-			.notNull()
-			.references(() => documents.id),
-		chatData: jsonb("chat_data").notNull(),
-		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-		updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-	},
-	(t) => ({
-		userDocumentIdx: index("user_document_idx").on(t.userId, t.documentId),
-		chatIdIdx: index("chat_id_idx").on(t.chatId),
-	}),
-);
-
-export type Chat = InferSelectModel<typeof chats>;
-
-export const insertChatSchema = createInsertSchema(chats);
-export const selectChatSchema = createSelectSchema(chats);
 
 export const vectorDatabases = pgTable(
 	"vector_databases",

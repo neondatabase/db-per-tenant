@@ -24,9 +24,7 @@ type GetLoadContext = (args: {
 export const getLoadContext: GetLoadContext = ({ context, request }) => {
 	try {
 		const env = EnvSchema.parse(context.cloudflare.env);
-		const url = new URL(request.url);
-		const { hostname } = url;
-		const auth = new AuthService(env, hostname);
+		const auth = new AuthService(env);
 
 		const sql = neon(context.cloudflare.env.DATABASE_URL);
 

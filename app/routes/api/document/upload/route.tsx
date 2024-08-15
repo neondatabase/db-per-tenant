@@ -28,7 +28,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 				},
 			}),
 			new PutObjectCommand({
-				Bucket: process.env.CLOUDFLARE_R2_BUCKET_NAME,
+				Bucket: context.cloudflare.env.CLOUDFLARE_R2_BUCKET_NAME,
 				Key: key,
 			}),
 			{

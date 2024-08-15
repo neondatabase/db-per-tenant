@@ -6,9 +6,7 @@ import {
 	HumanMessage,
 	SystemMessage,
 } from "@langchain/core/messages";
-import { eq } from "drizzle-orm";
 import { NeonPostgres } from "@langchain/community/vectorstores/neon";
-import { vectorDatabases } from "../../../../lib/db/schema";
 import { createNeonApiClient } from "../../../../lib/vector-db";
 
 export const action = async ({ context, request }: ActionFunctionArgs) => {
@@ -31,14 +29,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 		documentId: string;
 	} = await request.json();
 
-	// get the user's last message
-
 	const { content: prompt } = messages[messages.length - 1];
-
-	const vectorDb = await context.db
-		.select()
-		.from(vectorDatabases)
-		.where(eq(vectorDatabases.userId, user.id));
 
 	const neonApiClient = createNeonApiClient(
 		context.cloudflare.env.NEON_API_KEY,
@@ -49,7 +40,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 		{
 			params: {
 				path: {
-					project_id: vectorDb[0].vectorDbId,
+					project_id: user.vectorDbId,
 				},
 				query: {
 					role_name: "neondb_owner",
@@ -87,7 +78,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 
 	const model = new ChatOpenAI({
 		apiKey: context.cloudflare.env.OPENAI_API_KEY,
-		model: "gpt-4o-mini	",
+		model: "gpt-4o-mini",
 		temperature: 0,
 	});
 

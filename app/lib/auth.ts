@@ -3,7 +3,7 @@ import {
 	selectUserSchema,
 	users,
 	vectorDatabases,
-	type User,
+	type User as TUser,
 } from "./db/schema";
 import { generateId } from "./db/utils/generate-id";
 import { getErrorMessage } from "./utils/get-error-message";
@@ -16,15 +16,15 @@ import { Authenticator } from "remix-auth";
 import type { SessionStorage } from "@remix-run/cloudflare";
 import { z } from "zod";
 import { createDbClient } from "./db";
+import { eq } from "drizzle-orm";
 
 const SessionSchema = z.object({
 	user: selectUserSchema.optional(),
-	strategy: z.string().optional(),
-	"oauth2:state": z.string().uuid().optional(),
-	"auth:error": z.object({ message: z.string() }).optional(),
 });
 
-export type Session = z.infer<typeof SessionSchema>;
+export type User = TUser & {
+	vectorDbId: string;
+};
 
 export interface IAuthService {
 	readonly authenticator: Authenticator<User>;
@@ -35,7 +35,7 @@ export class AuthService implements IAuthService {
 	#sessionStorage: SessionStorage<typeof SessionSchema>;
 	#authenticator: Authenticator<User>;
 
-	constructor(env: Env, hostname: string) {
+	constructor(env: Env) {
 		const sessionStorage = createCookieSessionStorage({
 			cookie: {
 				name: "__session",
@@ -60,10 +60,7 @@ export class AuthService implements IAuthService {
 				{
 					clientID: env.GOOGLE_CLIENT_ID,
 					clientSecret: env.GOOGLE_CLIENT_SECRET,
-					callbackURL:
-						process.env.NODE_ENV === "production"
-							? `https://${hostname}/api/auth/google/callback`
-							: env.GOOGLE_CALLBACK_URL,
+					callbackURL: env.GOOGLE_CALLBACK_URL,
 				},
 				async ({ profile }) => {
 					const email = profile.emails[0].value;
@@ -71,11 +68,16 @@ export class AuthService implements IAuthService {
 					try {
 						const db = createDbClient(env.DATABASE_URL);
 
-						const user = await db.query.users.findFirst({
-							where: (users, { eq }) => eq(users.email, email),
-						});
+						const userData = await db
+							.select({
+								user: users,
+								vectorDatabase: vectorDatabases,
+							})
+							.from(users)
+							.leftJoin(vectorDatabases, eq(users.id, vectorDatabases.userId))
+							.where(eq(users.email, email));
 
-						if (!user) {
+						if (userData.length === 0) {
 							const neonApiClient = createNeonApiClient(env.NEON_API_KEY);
 
 							const { data, error } = await neonApiClient.POST("/projects", {
@@ -121,15 +123,26 @@ export class AuthService implements IAuthService {
 								.onConflictDoNothing()
 								.returning();
 
-							await db.insert(vectorDatabases).values({
-								vectorDbId,
-								userId: newUser[0].id,
-							});
+							await db
+								.insert(vectorDatabases)
+								.values({
+									vectorDbId,
+									userId: newUser[0].id,
+								})
+								.returning();
 
-							return newUser[0];
+							const result = {
+								...newUser[0],
+								vectorDbId,
+							};
+
+							return result;
 						}
 
-						return user;
+						return {
+							...user,
+							vectorDbId: vectorDatabase.vectorDbId,
+						};
 					} catch (error) {
 						console.error("User creation error:", error);
 						throw new Error(getErrorMessage(error));

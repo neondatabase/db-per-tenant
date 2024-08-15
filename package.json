@@ -17,8 +17,7 @@
 		"start": "wrangler pages dev ./build/client",
 		"typecheck": "tsc",
 		"typegen": "wrangler types",
-		"vector-db-api:generate": "bunx openapi-typescript https://neon.tech/api_spec/release/v2.json -o ./app/lib/vector-db/api-schema.ts",
-		"vector-db:generate": "drizzle-kit generate --config=./app/lib/vector-db/config.ts"
+		"vector-db-api:generate": "bunx openapi-typescript https://neon.tech/api_spec/release/v2.json -o ./app/lib/vector-db/api-schema.ts"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.629.0",

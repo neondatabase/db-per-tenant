@@ -1,9 +1,9 @@
 - toast for errors
 - README
-- Deploy
 - Remove file size from schema
-- input validation and limit the number of docs that can be created
 - rate limit endpoints
+- max file size
+- max numbeer of documents
 
 # AI vector database per tenant
 
