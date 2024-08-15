@@ -39,7 +39,12 @@ export default function Documents() {
 				</Heading>
 				{allDocuments.length > 0 && (
 					<Form action="/document/new">
-						<Button size="lg" variant="primary" type="submit">
+						<Button
+							isDisabled={allDocuments.length === 3}
+							size="lg"
+							variant="primary"
+							type="submit"
+						>
 							New Document
 							<Plus className="w-4 h-4 ml-2" />
 						</Button>
