@@ -31,6 +31,8 @@
     "@remix-run/cloudflare-pages": "^2.10.3",
     "@remix-run/react": "^2.10.3",
     "@tanstack/react-query": "^5.51.23",
+    "@upstash/ratelimit": "^2.0.1",
+    "@upstash/redis": "^1.34.0",
     "ai": "^3.3.7",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",

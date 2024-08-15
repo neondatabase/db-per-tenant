@@ -4,8 +4,35 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { documents } from "../../../../lib/db/schema";
 import { count, eq } from "drizzle-orm";
 import { MAX_FILE_COUNT, MAX_FILE_SIZE } from "../../../../lib/constants";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis/cloudflare";
 
 export const action = async ({ context, request }: ActionFunctionArgs) => {
+	const ip = request.headers.get("CF-Connecting-IP");
+	const identifier = ip ?? "global";
+
+	const ratelimit = new Ratelimit({
+		redis: Redis.fromEnv(context.cloudflare.env),
+		limiter: Ratelimit.fixedWindow(10, "60 s"),
+		analytics: true,
+	});
+
+	const { success, limit, remaining, reset } =
+		await ratelimit.limit(identifier);
+
+	if (!success) {
+		return json(
+			{
+				error: "Rate limit exceeded",
+				limit,
+				remaining,
+				reset,
+			},
+			{
+				status: 429,
+			},
+		);
+	}
 	const user = await context.auth.authenticator.isAuthenticated(request);
 
 	if (!user) {

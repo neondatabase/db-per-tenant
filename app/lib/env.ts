@@ -16,6 +16,10 @@ export const EnvSchema = z.object({
 	CLOUDFLARE_R2_BUCKET_NAME: z.string(),
 	CLOUDFLARE_R2_ACCOUNT_ID: z.string(),
 
+	// Upstash
+	UPSTASH_REDIS_REST_URL: z.string(),
+	UPSTASH_REDIS_REST_TOKEN: z.string(),
+
 	OPENAI_API_KEY: z.string(),
 });
 

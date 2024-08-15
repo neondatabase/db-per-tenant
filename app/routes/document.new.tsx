@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { json, type LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { Upload as DocumentUploader } from "../components/documents/upload";
 import { Heading } from "../components/ui/heading";
 

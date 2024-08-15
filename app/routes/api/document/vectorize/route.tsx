@@ -10,6 +10,8 @@ import { eq } from "drizzle-orm";
 import { documents, vectorDatabases } from "../../../../lib/db/schema";
 import { generateId } from "../../../../lib/db/utils/generate-id";
 import { createNeonApiClient } from "../../../../lib/vector-db";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis/cloudflare";
 
 // vectorize document using langchain
 // request validation using Zod
@@ -17,6 +19,32 @@ import { createNeonApiClient } from "../../../../lib/vector-db";
 // check that user is authenticated, validate request body, generate embeddings and store them in associated vector store for the user, create document
 export const action = async ({ context, request }: ActionFunctionArgs) => {
 	try {
+		const ip = request.headers.get("CF-Connecting-IP");
+		const identifier = ip ?? "global";
+
+		const ratelimit = new Ratelimit({
+			redis: Redis.fromEnv(context.cloudflare.env),
+			limiter: Ratelimit.fixedWindow(10, "60 s"),
+			analytics: true,
+		});
+
+		const { success, limit, remaining, reset } =
+			await ratelimit.limit(identifier);
+
+		if (!success) {
+			return json(
+				{
+					error: "Rate limit exceeded",
+					limit,
+					remaining,
+					reset,
+				},
+				{
+					status: 429,
+				},
+			);
+		}
+
 		const user = await context.auth.authenticator.isAuthenticated(request);
 
 		if (!user) {

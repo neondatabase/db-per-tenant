@@ -20,7 +20,7 @@ export const Upload = () => {
 	const upload = useMutation({
 		mutationFn: async (file: File) => {
 			if (file.size > MAX_FILE_SIZE) {
-				throw new Error("File size exceeds the maximum limit of 50MB");
+				throw new Error("File size exceeds the maximum limit of 10MB");
 			}
 
 			const res = await fetch("/api/document/upload", {
