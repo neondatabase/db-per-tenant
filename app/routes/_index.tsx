@@ -4,7 +4,7 @@ import {
 	type MetaFunction,
 	redirect,
 } from "@remix-run/cloudflare";
-import { Form } from "@remix-run/react";
+import { Form, Link } from "@remix-run/react";
 
 import { Github } from "../components/icons/github";
 import { Google } from "../components/icons/google";
@@ -40,7 +40,13 @@ export default function Index() {
 						</h1>
 						<p className="mt-6 md:text-lg text-balance">
 							Example chat-with-pdf app showing how to provision a dedicated
-							vector database instance for each user. Powered by Neon
+							vector database instance for each user.{" "}
+							<a
+								href="https://neon.tech?ref=vector-db-per-tenant"
+								className="text-primary-base hover:underline"
+							>
+								Powered by Neon{" "}
+							</a>
 						</p>
 						<div className="mt-10 flex flex-col md:flex-row items-center w-full justify-center gap-6">
 							<Form action="/api/auth/google" method="POST">

@@ -121,35 +121,48 @@ export const Upload = () => {
 	return (
 		<>
 			{!file ? (
-				<DropZone
-					onDrop={async (e) => {
-						const files = e.items.filter(
-							(file) => file.kind === "file",
-						) as FileDropItem[];
+				<>
+					<p className="mb-3">
+						Download sample file -{" "}
+						<a
+							target="_blank"
+							rel="noreferrer"
+							className="underline hover:no-underline text-muted-high-contrast underline-offset-4"
+							href="https://s2.q4cdn.com/470004039/files/doc_earnings/2023/q4/filing/_10-K-Q4-2023-As-Filed.pdf"
+						>
+							FORM 10-K - Apple Inc.{" "}
+						</a>
+					</p>
+					<DropZone
+						onDrop={async (e) => {
+							const files = e.items.filter(
+								(file) => file.kind === "file",
+							) as FileDropItem[];
 
-						if (files && files.length > 0) {
-							const file = await files[0].getFile();
-							await handleFileSelection(file);
-						}
-					}}
-					className="w-full gap-y-5 min-h-[50vh] flex items-center justify-center p-10"
-				>
-					<FileTrigger
-						allowsMultiple={false}
-						acceptedFileTypes={[".pdf"]}
-						onSelect={async (files) => {
 							if (files && files.length > 0) {
-								await handleFileSelection(files[0]);
+								const file = await files[0].getFile();
+								await handleFileSelection(file);
 							}
 						}}
+						className="w-full gap-y-5 min-h-[50vh] flex items-center justify-center p-10"
 					>
-						<FileUpload className="size-10" />
-						<Button size="lg" variant="ghost">
-							Drag & drop or choose file to upload
-						</Button>
-						<Text size="xs"> Maximum PDF file size is 10MB</Text>
-					</FileTrigger>
-				</DropZone>
+						<FileTrigger
+							allowsMultiple={false}
+							acceptedFileTypes={[".pdf"]}
+							onSelect={async (files) => {
+								if (files && files.length > 0) {
+									await handleFileSelection(files[0]);
+								}
+							}}
+						>
+							<FileUpload className="size-10" />
+							<Button size="lg" variant="ghost">
+								Drag & drop or choose file to upload
+							</Button>
+							<Text size="xs"> Maximum PDF file size is 10MB</Text>
+						</FileTrigger>
+					</DropZone>
+				</>
 			) : (
 				<div className="w-full gap-y-5 min-h-[50vh] flex flex-col items-center justify-center p-10">
 					<Heading>File Selected</Heading>
