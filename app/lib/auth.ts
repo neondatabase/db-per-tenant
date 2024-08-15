@@ -77,7 +77,11 @@ export class AuthService implements IAuthService {
 							.leftJoin(vectorDatabases, eq(users.id, vectorDatabases.userId))
 							.where(eq(users.email, email));
 
-						if (userData.length === 0) {
+						if (
+							userData.length === 0 ||
+							!userData[0].vectorDatabase ||
+							!userData[0].user
+						) {
 							const neonApiClient = createNeonApiClient(env.NEON_API_KEY);
 
 							const { data, error } = await neonApiClient.POST("/projects", {
@@ -140,8 +144,8 @@ export class AuthService implements IAuthService {
 						}
 
 						return {
-							...user,
-							vectorDbId: vectorDatabase.vectorDbId,
+							...userData[0].user,
+							vectorDbId: userData[0].vectorDatabase.vectorDbId,
 						};
 					} catch (error) {
 						console.error("User creation error:", error);
