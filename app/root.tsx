@@ -12,12 +12,18 @@ import { json, type LoaderFunctionArgs } from "@remix-run/cloudflare";
 
 import { Navbar } from "./components/layout/navbar";
 import type { User } from "./lib/db/schema";
+import { GenericErrorBoundary } from "./components/misc/error-boundary";
 
 const queryClient = new QueryClient();
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
-	const user = await context.auth.authenticator.isAuthenticated(request);
-	return json({ user });
+	try {
+		const user = await context.auth.authenticator.isAuthenticated(request);
+		return json({ user });
+	} catch (error) {
+		console.error(error);
+		return json({ user: null });
+	}
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -42,6 +48,40 @@ export function Layout({ children }: { children: React.ReactNode }) {
 	);
 }
 
+function Document({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
+	return (
+		<html lang="en">
+			<head>
+				<meta charSet="utf-8" />
+				<meta name="viewport" content="width=device-width, initial-scale=1" />
+				<Meta />
+				<Links />
+			</head>
+			<body className="bg-muted-app text-muted-base transition-colors">
+				{children}
+				<ScrollRestoration />
+				<Scripts />
+			</body>
+		</html>
+	);
+}
+
 export default function App() {
-	return <Outlet />;
+	return (
+		<Document>
+			<Outlet />
+		</Document>
+	);
+}
+
+export function ErrorBoundary() {
+	return (
+		<Document>
+			<GenericErrorBoundary />
+		</Document>
+	);
 }

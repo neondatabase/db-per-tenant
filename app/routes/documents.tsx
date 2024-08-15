@@ -2,7 +2,6 @@ import { json, redirect, type LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { Form, Link, useLoaderData } from "@remix-run/react";
 import { desc, eq } from "drizzle-orm";
 import { Plus } from "../components/icons/plus";
-import { createDbClient } from "../lib/db";
 import { documents } from "../lib/db/schema";
 import { Button } from "../components/ui/button";
 import { Heading } from "../components/ui/heading";
@@ -17,8 +16,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 			return redirect("/login");
 		}
 
-		const db = createDbClient(context.cloudflare.env.DATABASE_URL);
-		const allDocuments = await db
+		const allDocuments = await context.db
 			.select()
 			.from(documents)
 			.where(eq(documents.userId, user.id))

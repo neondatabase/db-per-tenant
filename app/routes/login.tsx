@@ -1,6 +1,8 @@
 import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { Form } from "@remix-run/react";
 import { Button } from "../components/ui/button";
+import { Google } from "../components/icons/google";
+import { Heading } from "../components/ui/heading";
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
 	return await context.auth.authenticator.isAuthenticated(request, {
@@ -11,14 +13,15 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 export default function Login() {
 	return (
 		<>
-			<div className="flex min-h-screen flex-col items-center justify-center bg-[#111111] px-6 text-[#b4b4b4]">
+			<div className="flex min-h-screen flex-col items-center justify-center px-6 ">
 				<div className="w-full max-w-md">
-					<h1 className="mb-3 text-2xl font-medium text-[#eeeeee]">Sign in</h1>
-					<Form action="/api/auth/google" method="POST">
-						<Button type="submit" variant="primary">
-							Login With Google
-						</Button>
-					</Form>
+					<div className="flex items-center justify-center gap-x-6">
+						<Form action="/api/auth/google" method="POST">
+							<Button type="submit" variant="outline">
+								<Google className="w-4 h-4 mr-2" /> Continue with Google
+							</Button>
+						</Form>
+					</div>
 				</div>
 			</div>
 		</>

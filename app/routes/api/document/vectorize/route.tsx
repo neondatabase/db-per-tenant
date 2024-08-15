@@ -8,7 +8,6 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { eq } from "drizzle-orm";
 import { documents, vectorDatabases } from "../../../../lib/db/schema";
-import { createDbClient } from "../../../../lib/db";
 import { generateId } from "../../../../lib/db/utils/generate-id";
 import { createNeonApiClient } from "../../../../lib/vector-db";
 
@@ -34,9 +33,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 
 		// get user's project ID, and get the connection string
 
-		const db = createDbClient(context.cloudflare.env.DATABASE_URL);
-
-		const vectorDb = await db
+		const vectorDb = await context.db
 			.select()
 			.from(vectorDatabases)
 			.where(eq(vectorDatabases.userId, user.id));

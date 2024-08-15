@@ -8,7 +8,6 @@ import {
 } from "@langchain/core/messages";
 import { eq } from "drizzle-orm";
 import { NeonPostgres } from "@langchain/community/vectorstores/neon";
-import { createDbClient } from "../../../../lib/db";
 import { vectorDatabases } from "../../../../lib/db/schema";
 import { createNeonApiClient } from "../../../../lib/vector-db";
 
@@ -36,9 +35,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 
 	const { content: prompt } = messages[messages.length - 1];
 
-	const db = createDbClient(context.cloudflare.env.DATABASE_URL);
-
-	const vectorDb = await db
+	const vectorDb = await context.db
 		.select()
 		.from(vectorDatabases)
 		.where(eq(vectorDatabases.userId, user.id));
@@ -89,7 +86,8 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 	});
 
 	const model = new ChatOpenAI({
-		model: "gpt-3.5-turbo-0125",
+		apiKey: context.cloudflare.env.OPENAI_API_KEY,
+		model: "gpt-4o-mini	",
 		temperature: 0,
 	});
 

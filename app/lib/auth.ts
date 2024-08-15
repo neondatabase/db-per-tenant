@@ -5,7 +5,6 @@ import {
 	vectorDatabases,
 	type User,
 } from "./db/schema";
-import { createDbClient } from "./db";
 import { generateId } from "./db/utils/generate-id";
 import { getErrorMessage } from "./utils/get-error-message";
 import { neon } from "@neondatabase/serverless";
@@ -16,7 +15,7 @@ import { createCookieSessionStorage } from "@remix-run/cloudflare";
 import { Authenticator } from "remix-auth";
 import type { SessionStorage } from "@remix-run/cloudflare";
 import { z } from "zod";
-import type { TypedSessionStorage } from "remix-utils/typed-session";
+import { createDbClient } from "./db";
 
 const SessionSchema = z.object({
 	user: selectUserSchema.optional(),
@@ -61,7 +60,10 @@ export class AuthService implements IAuthService {
 				{
 					clientID: env.GOOGLE_CLIENT_ID,
 					clientSecret: env.GOOGLE_CLIENT_SECRET,
-					callbackURL: env.GOOGLE_CALLBACK_URL,
+					callbackURL:
+						process.env.NODE_ENV === "production"
+							? `https://${hostname}/api/auth/google/callback`
+							: env.GOOGLE_CALLBACK_URL,
 				},
 				async ({ profile }) => {
 					const email = profile.emails[0].value;

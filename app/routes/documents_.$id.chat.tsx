@@ -3,12 +3,12 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { json, redirect, type LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import { eq } from "drizzle-orm";
-import { Button } from "react-aria-components";
+import { Button } from "../components/ui/button";
 import { Bot } from "../components/icons/bot";
 import { Send } from "../components/icons/send";
 import { Spinner } from "../components/icons/spinner";
 import { User } from "../components/icons/user";
-import { createDbClient } from "../lib/db";
+
 import { documents } from "../lib/db/schema";
 import { useChat } from "ai/react";
 import { Input } from "../components/ui/input";
@@ -27,9 +27,7 @@ export const loader = async ({
 			return redirect("/login");
 		}
 
-		const db = createDbClient(context.cloudflare.env.DATABASE_URL);
-
-		const document = await db
+		const document = await context.db
 			.select()
 			.from(documents)
 			.where(eq(documents.documentId, documentId));

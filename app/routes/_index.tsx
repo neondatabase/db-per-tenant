@@ -21,25 +21,28 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
-	return await context.auth.authenticator.isAuthenticated(request, {
-		successRedirect: "/documents",
-	});
+	const user = await context.auth.authenticator.isAuthenticated(request);
+
+	if (user) {
+		return redirect("/documents");
+	}
+	return json({ user: null });
 }
 
 export default function Index() {
 	return (
 		<div>
-			<div className="relative isolate px-6 pt-14 lg:px-8">
+			<div className="px-6 pt-14">
 				<div className="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
 					<div className="text-center">
-						<h1 className="text-4xl text-muted-high-contrast font-bold tracking-tight sm:text-6xl text-balance">
+						<h1 className="text-3xl text-muted-high-contrast font-bold tracking-tight sm:text-6xl text-balance">
 							AI vector database per tenant
 						</h1>
-						<p className="mt-6 text-lg leading-8 text-balance">
+						<p className="mt-6 md:text-lg text-balance">
 							Example chat-with-pdf app showing how to provision a dedicated
 							vector database instance for each user. Powered by Neon
 						</p>
-						<div className="mt-10 flex items-center justify-center gap-x-6">
+						<div className="mt-10 flex flex-col md:flex-row items-center w-full justify-center gap-6">
 							<Form action="/api/auth/google" method="POST">
 								<Button type="submit" variant="outline">
 									<Google className="w-4 h-4 mr-2" /> Continue with Google
