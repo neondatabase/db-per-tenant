@@ -1,0 +1,7 @@
+{
+	"typescript.preferences.autoImportFileExcludePatterns": [
+		"react-aria-components",
+		"postcss",
+		"drizzle-orm/mysql-core"
+	]
+}
