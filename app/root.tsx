@@ -13,6 +13,7 @@ import { json, type LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { Navbar } from "./components/layout/navbar";
 import type { User } from "./lib/db/schema";
 import { GenericErrorBoundary } from "./components/misc/error-boundary";
+import { Toaster } from "./components/ui/toast";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			</head>
 			<QueryClientProvider client={queryClient}>
 				<Navbar user={data.user as User | null} />
+				<Toaster />
 				<body className="bg-[#111111] text-[#b4b4b4]">
 					{children}
 					<ScrollRestoration />

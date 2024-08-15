@@ -7,6 +7,7 @@ import { FileTrigger } from "../ui/file-trigger";
 import { Heading } from "../ui/heading";
 import { Text } from "../ui/text";
 import { useNavigate } from "@remix-run/react";
+import { toast } from "sonner";
 
 export const Upload = () => {
 	const navigate = useNavigate();
@@ -41,6 +42,7 @@ export const Upload = () => {
 		},
 		onError: (error) => {
 			console.error(error);
+			toast.error(`Something went wrong: ${error.message}`);
 		},
 	});
 
@@ -76,7 +78,7 @@ export const Upload = () => {
 	const handleSubmit = async (file) => {
 		if (file) {
 			upload.mutate(file, {
-				onSuccess: (data, variables, context) => {
+				onSuccess: (data) => {
 					ingest.mutate(
 						{
 							filename: data.filename,
@@ -88,6 +90,7 @@ export const Upload = () => {
 							},
 							onError: (error) => {
 								console.error(error);
+								toast.error(`Something went wrong: ${error.message}`);
 							},
 						},
 					);
@@ -122,14 +125,13 @@ export const Upload = () => {
 				<div className="w-full gap-y-5 min-h-[50vh] flex flex-col items-center justify-center p-10">
 					<Heading>File Selected</Heading>
 					<Text>{file.name}</Text>
+					{upload.isPending && <p>Uploading...</p>}
+					{upload.isSuccess && <p>File uploaded successfully</p>}
+
+					{ingest.isPending && <p>Processing...</p>}
+					{ingest.isSuccess && <p>File ingested successfully</p>}
 				</div>
 			)}
-
-			{upload.isPending && <p>Uploading...</p>}
-			{upload.isSuccess && <p>File uploaded successfully</p>}
-
-			{ingest.isPending && <p>Processing...</p>}
-			{ingest.isSuccess && <p>File ingested successfully</p>}
 		</>
 	);
 };

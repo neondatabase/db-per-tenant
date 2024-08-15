@@ -70,7 +70,6 @@ export default function Documents() {
 								<p className="mb-0.5">
 									{formatDistanceToNowStrict(new Date(document.createdAt))} ago
 								</p>
-								<p>{document.fileSize}mb</p>
 							</Link>
 						))}
 					</>
