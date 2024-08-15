@@ -89,6 +89,6 @@ Once the user uploads a document, we ingest it and store it in the database asso
 
 ## Conclusion
 
-While this pattern is useful in building AI applications, you can simply use it to provide each tenant with its own database. If you have any questions, feel free to reach out in the [Neon Discord](https://neon.tech/discord) or to get in touch with the Neon Sales team. We'd love to hear from you.
+While this pattern is useful in building AI applications, you can simply use it to provide each tenant with its own database. If you have any questions, feel free to reach out in the [Neon Discord](https://neon.tech/discord) or to get in touch with the [Neon Sales team](https://neon.tech/contact-sales). We'd love to hear from you.
 
 
