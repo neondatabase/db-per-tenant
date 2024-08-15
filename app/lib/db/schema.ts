@@ -43,7 +43,6 @@ export const documents = pgTable(
 			.references(() => users.id, { onDelete: "cascade" }),
 		title: varchar("title", { length: 255 }).notNull(),
 		fileName: text("file_name").notNull(),
-		fileSize: numeric("file_size").notNull(),
 		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 		updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 	},

@@ -1,0 +1,1 @@
+ALTER TABLE "documents" DROP COLUMN IF EXISTS "file_size";

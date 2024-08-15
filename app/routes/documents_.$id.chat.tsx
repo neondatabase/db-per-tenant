@@ -69,10 +69,10 @@ export default function DocumentChat() {
 		});
 
 	return (
-		<div className="flex items-end h-[90vh] overflow-hidden">
+		<div className="flex flex-col md:items-end h-[90vh] md:flex-row overflow-hidden">
 			<iframe src={url} width="100%" height="100%" title="Document" />
 			<div className="w-full flex flex-col h-full bg-muted-app-subtle">
-				<div className=" flex-grow overflow-y-auto flex flex-col">
+				<div className=" flex-grow overflow-y-auto flex flex-col h-auto max-h-[40vh] md:max-h-full">
 					{messages.length > 0
 						? messages.map((m) => (
 								<div

@@ -13,7 +13,7 @@ import { json, type LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { Navbar } from "./components/layout/navbar";
 import type { User } from "./lib/db/schema";
 import { GenericErrorBoundary } from "./components/misc/error-boundary";
-import { Toaster } from "./components/ui/toast";
+import { Toaster } from "sonner";
 
 const queryClient = new QueryClient();
 
@@ -27,8 +27,13 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
 	}
 };
 
-export function Layout({ children }: { children: React.ReactNode }) {
+function Document({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
 	const data = useLoaderData<typeof loader>();
+
 	return (
 		<html lang="en">
 			<head>
@@ -39,35 +44,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			</head>
 			<QueryClientProvider client={queryClient}>
 				<Navbar user={data.user as User | null} />
-				<Toaster />
-				<body className="bg-[#111111] text-[#b4b4b4]">
+				<body className="bg-muted-app text-muted-base transition-colors">
+					<Toaster theme="dark" />
 					{children}
 					<ScrollRestoration />
 					<Scripts />
 				</body>
 			</QueryClientProvider>
-		</html>
-	);
-}
-
-function Document({
-	children,
-}: {
-	children: React.ReactNode;
-}) {
-	return (
-		<html lang="en">
-			<head>
-				<meta charSet="utf-8" />
-				<meta name="viewport" content="width=device-width, initial-scale=1" />
-				<Meta />
-				<Links />
-			</head>
-			<body className="bg-muted-app text-muted-base transition-colors">
-				{children}
-				<ScrollRestoration />
-				<Scripts />
-			</body>
 		</html>
 	);
 }

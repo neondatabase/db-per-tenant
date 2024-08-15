@@ -124,7 +124,6 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 				userId: user.id,
 				title: title,
 				fileName: filename,
-				fileSize: `0`,
 			})
 			.returning();
 

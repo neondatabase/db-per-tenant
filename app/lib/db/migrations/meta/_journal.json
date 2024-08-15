@@ -8,6 +8,13 @@
       "when": 1723725443908,
       "tag": "0000_colorful_tusk",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1723733161480,
+      "tag": "0001_charming_stick",
+      "breakpoints": true
     }
   ]
 }

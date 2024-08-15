@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button";
 import { Heading } from "../components/ui/heading";
 import { Upload as DocumentUploader } from "../components/documents/upload";
 import { formatDistanceToNowStrict } from "date-fns";
+import { MAX_FILE_COUNT } from "../lib/constants";
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
 	try {
@@ -40,7 +41,7 @@ export default function Documents() {
 				{allDocuments.length > 0 && (
 					<Form action="/document/new">
 						<Button
-							isDisabled={allDocuments.length === 3}
+							isDisabled={allDocuments.length >= MAX_FILE_COUNT}
 							size="lg"
 							variant="primary"
 							type="submit"

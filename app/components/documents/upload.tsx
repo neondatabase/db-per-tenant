@@ -9,41 +9,53 @@ import { Text } from "../ui/text";
 import { useNavigate } from "@remix-run/react";
 import { toast } from "sonner";
 import type { FileDropItem } from "react-aria";
+import { MAX_FILE_SIZE } from "../../lib/constants";
+import { Spinner } from "../icons/spinner";
+import { CheckCircle } from "../icons/check-circle";
 
 export const Upload = () => {
 	const navigate = useNavigate();
+	const [file, setFile] = useState<File | FileDropItem | undefined>();
 
 	const upload = useMutation({
 		mutationFn: async (file: File) => {
+			if (file.size > MAX_FILE_SIZE) {
+				throw new Error("File size exceeds the maximum limit of 50MB");
+			}
+
 			const res = await fetch("/api/document/upload", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ filename: file.name }),
+				body: JSON.stringify({
+					filename: file.name,
+					fileSize: file.size,
+				}),
 			});
 
 			if (!res.ok) {
-				throw new Error("An error occurred while uploading the file");
+				const errorData = await res.json();
+				throw new Error(errorData.error);
 			}
 
-			const data = await res.json();
-
-			return data;
+			return res.json();
 		},
-		onSuccess: async (data) => {
+		onSuccess: async (data, file) => {
 			const uploadRes = await fetch(data.url, {
 				method: "PUT",
 				body: file,
 			});
 
 			if (!uploadRes.ok) {
-				throw new Error("An error occurred while uploading the file");
+				throw new Error(
+					"An error occurred while uploading the file to storage",
+				);
 			}
 		},
-		onError: (error) => {
-			console.error(error);
-			toast.error(`Something went wrong: ${error.message}`);
+		onError: (error: Error) => {
+			console.error("Upload error:", error);
+			toast.error(`Upload failed: ${error.message}`);
 		},
 	});
 
@@ -55,7 +67,6 @@ export const Upload = () => {
 			filename: string;
 			title: string;
 		}) => {
-			// API call to the ingest endpoint at /document/ingest
 			const res = await fetch("/api/document/vectorize", {
 				method: "POST",
 				headers: {
@@ -65,42 +76,48 @@ export const Upload = () => {
 			});
 
 			if (!res.ok) {
-				throw new Error("An error occurred while ingesting the file");
+				const errorData = await res.json().catch(() => ({}));
+				throw new Error(
+					errorData.message || "An error occurred while ingesting the file",
+				);
 			}
 
-			const data = await res.json();
-
-			return data;
+			return res.json();
+		},
+		onError: (error: Error) => {
+			console.error("Ingest error:", error);
+			toast.error(`File processing failed: ${error.message}`);
 		},
 	});
 
-	const [file, setFile] = useState<File | FileDropItem | undefined>();
+	const handleSubmit = async (file: File) => {
+		if (!file) {
+			toast.error("No file selected");
+			return;
+		}
 
-	const handleSubmit = async (file) => {
-		if (file) {
-			upload.mutate(file, {
-				onSuccess: (data) => {
-					ingest.mutate(
-						{
-							filename: data.filename,
-							title: data.title,
-						},
-						{
-							onSuccess: (data) => {
-								return navigate(`/documents/${data.document.documentId}/chat`);
-							},
-							onError: (error) => {
-								console.error(error);
-								toast.error(`Something went wrong: ${error.message}`);
-							},
-						},
-					);
-				},
+		try {
+			const uploadResult = await upload.mutateAsync(file);
+			const ingestResult = await ingest.mutateAsync({
+				filename: uploadResult.filename,
+				title: uploadResult.title,
 			});
+			navigate(`/documents/${ingestResult.document.documentId}/chat`);
+		} catch (error) {
+			console.error("Submit error:", error);
+			// Error is already handled in the respective mutation's onError
 		}
 	};
 
-	// on DropZone drop, upload the file. hide the file trigger. show the file name and a loading spinner
+	const handleFileSelection = async (selectedFile: File) => {
+		if (selectedFile.type !== "application/pdf") {
+			toast.error("Only PDF files are allowed");
+			return;
+		}
+		setFile(selectedFile);
+		await handleSubmit(selectedFile);
+	};
+
 	return (
 		<>
 			{!file ? (
@@ -112,8 +129,7 @@ export const Upload = () => {
 
 						if (files && files.length > 0) {
 							const file = await files[0].getFile();
-							setFile(file);
-							await handleSubmit(file);
+							await handleFileSelection(file);
 						}
 					}}
 					className="w-full gap-y-5 min-h-[50vh] flex items-center justify-center p-10"
@@ -123,8 +139,7 @@ export const Upload = () => {
 						acceptedFileTypes={[".pdf"]}
 						onSelect={async (files) => {
 							if (files && files.length > 0) {
-								setFile(files[0]);
-								await handleSubmit(files[0]);
+								await handleFileSelection(files[0]);
 							}
 						}}
 					>
@@ -132,18 +147,45 @@ export const Upload = () => {
 						<Button size="lg" variant="ghost">
 							Drag & drop or choose file to upload
 						</Button>
-						<Text size="xs"> Maximum PDF file size is 50mb</Text>
+						<Text size="xs"> Maximum PDF file size is 50MB</Text>
 					</FileTrigger>
 				</DropZone>
 			) : (
 				<div className="w-full gap-y-5 min-h-[50vh] flex flex-col items-center justify-center p-10">
 					<Heading>File Selected</Heading>
 					<Text>{file.name}</Text>
-					{upload.isPending && <p>Uploading...</p>}
-					{upload.isSuccess && <p>File uploaded successfully</p>}
+					{upload.isPending && (
+						<p className="flex items-center gap-2">
+							Uploading <Spinner className="w-4 h-4" />
+						</p>
+					)}
+					{upload.isSuccess && (
+						<p className="flex items-center gap-2">
+							File uploaded successfully <CheckCircle className="w-4 h-4" />
+						</p>
+					)}
+					{upload.isError && (
+						<p className=" flex items-center gap-2 text-red-500">
+							Upload failed: {upload.error.message}
+						</p>
+					)}
 
-					{ingest.isPending && <p>Processing...</p>}
-					{ingest.isSuccess && <p>File ingested successfully</p>}
+					{ingest.isPending && (
+						<p className="flex items-center gap-2">
+							Processing <Spinner className="w-4 h-4" />
+						</p>
+					)}
+					{ingest.isSuccess && (
+						<p className="flex items-center gap-2">
+							File ingested successfully <CheckCircle className="w-4 h-4" />
+						</p>
+					)}
+					{ingest.isError && (
+						<p className="text-red-500">
+							Processing failed:
+							{ingest.error.message}
+						</p>
+					)}
 				</div>
 			)}
 		</>

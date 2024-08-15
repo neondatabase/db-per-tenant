@@ -1,9 +1,6 @@
-- toast for errors
-- README
-- Remove file size from schema
+
 - rate limit endpoints
-- max file size
-- max numbeer of documents
+
 
 # AI vector database per tenant
 
