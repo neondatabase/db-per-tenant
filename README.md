@@ -1,7 +1,3 @@
-
-- rate limit endpoints
-
-
 # AI vector database per tenant
 
 ## Background: Retrieval-Augmented Generation (RAG)
