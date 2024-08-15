@@ -8,6 +8,7 @@ import { Heading } from "../ui/heading";
 import { Text } from "../ui/text";
 import { useNavigate } from "@remix-run/react";
 import { toast } from "sonner";
+import type { FileDropItem } from "react-aria";
 
 export const Upload = () => {
 	const navigate = useNavigate();
@@ -73,7 +74,7 @@ export const Upload = () => {
 		},
 	});
 
-	const [file, setFile] = useState<File | undefined>();
+	const [file, setFile] = useState<File | FileDropItem | undefined>();
 
 	const handleSubmit = async (file) => {
 		if (file) {
@@ -103,7 +104,20 @@ export const Upload = () => {
 	return (
 		<>
 			{!file ? (
-				<DropZone className="w-full gap-y-5 min-h-[50vh] flex items-center justify-center p-10">
+				<DropZone
+					onDrop={async (e) => {
+						const files = e.items.filter(
+							(file) => file.kind === "file",
+						) as FileDropItem[];
+
+						if (files && files.length > 0) {
+							const file = await files[0].getFile();
+							setFile(file);
+							await handleSubmit(file);
+						}
+					}}
+					className="w-full gap-y-5 min-h-[50vh] flex items-center justify-center p-10"
+				>
 					<FileTrigger
 						allowsMultiple={false}
 						acceptedFileTypes={[".pdf"]}
