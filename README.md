@@ -56,7 +56,7 @@ This makes the proposed pattern of creating a database per tenant cost-effective
 
 ## Example app in action
 
-![Demo app](https://github.com/user-attachments/assets/11b13120-37b8-41a5-b26b-3974abc75ea4)
+![Demo app](https://github.com/user-attachments/assets/d9dee48f-a6d6-4dd5-bb89-fa5d31ca26e3)
 
 You can check out the [live version](https://ai-vector-db-per-tenant.pages.dev/) of the demo app that's in this repo. On the surface, it's an app where users can upload PDFs and chat with them. However, under the hood, each user gets a dedicated vector database instance. It's built using the following technologies:
 
