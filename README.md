@@ -67,6 +67,9 @@ Tech stack:
 - [Drizzle ORM](https://drizzle.team/) - TypeScript ORM
 - [Cloudflare Pages](https://pages.dev) - Deployment Platform
 - [Vercel AI SDK](sdk.vercel.ai/) -  TypeScript toolkit for building AI-powered applications
+- [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) - Object storage
+- [OpenAI](https://openai.com) with gpt-4o-mini - LLM
+- [Upstash](https://upstash.com) - Redis for ratelimiting
 - [Langchain](https://js.langchain.com/v0.2/docs/introduction/) - a framework for developing applications powered by large language models (LLMs)
 
 Here's an overview of the app works:
