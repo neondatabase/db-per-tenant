@@ -4,6 +4,7 @@ import reactAriaComponentsPlugin from "tailwindcss-react-aria-components";
 
 export default {
 	content: ["./app/**/{**,.client,.server}/**/*.{js,jsx,ts,tsx}"],
+	darkMode: "media",
 	theme: {
 		extend: {
 			colors: {
