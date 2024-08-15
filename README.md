@@ -8,13 +8,11 @@ We've also seen the rise of Retrieval-Augmented Generation (RAG), an architectur
 
 ![RAG Overview](https://github.com/user-attachments/assets/9254d4c4-8c06-4b37-ba68-af0af1139c7b)
 
-You first need to ingest your unstructured data and convert it into vector embeddings, a mathematical representation that can capture the meaning of text strings and allow you to measure their relatedness. 
+1. You first need to ingest your unstructured data and convert it into vector embeddings, a mathematical representation that can capture the meaning of text strings and allow you to measure their relatedness. 
+2. You can then store those embeddings in a vector database, where you can later retrieve relevant data by comparing them against an input vector embedding. If your dataset is dynamic, then you can generate embeddings before storing the data in your application's database.
+3. Once that's implemented, when a user sends a prompt, you convert it into a vector embedding, retrieve relevant data from the vector database, and then pass that additional context to the LLM so that you can improve its response.
 
-You can then store those embeddings in a vector database, where you can later retrieve relevant data by comparing them against an input vector embedding. If your dataset is dynamic, then you can generate embeddings before storing the data in your application's database.
-
-Once that's implemented, when a user sends a prompt, you convert it into a vector embedding, retrieve relevant data from the vector database, and then pass that additional context to the LLM so that you can improve its response.
-
-Fortunately, Postgres supports vector columns and similarity search operations through the use of the pgvector extension. Here's everything you need to do: 
+Fortunately, Postgres supports vector columns and similarity search operations through the use of the [pgvector extension](https://github.com/pgvector/pgvector). Here's everything you need to do: 
 
 ```sql
 -- Enable the extension
@@ -31,13 +29,11 @@ However, as the number of embeddings grows, querying performance can degrade. So
 
 ## Making Postgres scalable for AI apps: vector database per tenant
 
-Rather than having all vector embeddings stored in a single Postgres database, you give each tenant (could be a user, an organization, a workspace, or any other entity requiring isolation) its own dedicated vector database instance.
+Rather than having all vector embeddings stored in a single Postgres database, you give each tenant (could be a user, an organization, a workspace, or any other entity requiring isolation) its own dedicated vector database instance. Depending on your application, you will provision these databases after a certain event (e.g., a user signs up, an organization is created, a user upgrades from free to paid, etc.)
 
-You will then need to keep track of the different tenants and the vector databases that belong to them in your application's database. Here's an example architecture of the demo app that's included in this repo
+You will then need to keep track of the different tenants and the vector databases that belong to them in your application's database. Here's an example database architecture diagram of the demo app that's in this repo
 
-![Example architecture](https://github.com/user-attachments/assets/86a59c8c-5c75-4e8f-ba66-9fdd41f05bb3)
-
-Whenever you create a tenant, you will provision a database and set up the necessary schema for storing embeddings.
+![Architecture Diagram](https://github.com/user-attachments/assets/c788d581-1d0a-4201-842e-a20bd498e3db)
 
 This approach offers several benefits:
 1. Each tenant's data is stored in a separate, isolated database that is not shared with other tenants. This makes it possible for you to be compliant with data residency requirements (e.g., GDPR)
@@ -54,7 +50,7 @@ https://github.com/user-attachments/assets/96500fc3-3efa-4cfa-9339-81eb359ff105
 
 The database's compute can automatically scale up to meet an application's workload and can shut down when the database is unused.
 
-![image](https://github.com/user-attachments/assets/7f093ead-d51b-46bc-a473-0df483d91c18)
+![Autoscaling](https://github.com/user-attachments/assets/7f093ead-d51b-46bc-a473-0df483d91c18)
 
 This makes the proposed pattern of creating a database per tenant cost-effective.
 
@@ -72,6 +68,21 @@ Tech stack:
 - [Cloudflare Pages](https://pages.dev) - Deployment Platform
 - [Vercel AI SDK](sdk.vercel.ai/) -  TypeScript toolkit for building AI-powered applications
 - [Langchain](https://js.langchain.com/v0.2/docs/introduction/) - a framework for developing applications powered by large language models (LLMs)
+
+Here's an overview of the app works:
+
+### How the demo works: provisioning a vector database for each user
+
+Every time a user signs up, we provision a Neon database and map it to their user. 
+
+
+![Provision Vector database for each signup](https://github.com/user-attachments/assets/01e31752-cddb-45c5-b595-92c3cb815a88)
+
+### How the app works: RAG
+
+Once the user uploads a document, we ingest it and store it in the database associated with them. Next, once the user chats with their document, the vector similarity search runs against their database to retrieve the relevant information to be able to answer their prompt.
+
+![Vector database per tenant RAG](https://github.com/user-attachments/assets/43e0f872-6bab-4a06-8208-7871723f1fd0)
 
 ## Conclusion
 
