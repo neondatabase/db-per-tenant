@@ -1,6 +1,6 @@
-## Scaling Postgres for AI Applications: Vector Database per Tenant
+## Scaling Postgres for AI Applications: vector database per tenant
 
-Rather than having all vector embeddings stored in a single Postgres database, you provide each tenant (a user, an organization, a workspace, or any other entity requiring isolation) with its own dedicated Postgres database instance where you can store and query their embeddings.
+Rather than having all vector embeddings stored in a single Postgres database, you provide each tenant (a user, an organization, a workspace, or any other entity requiring isolation) with its own dedicated Postgres database instance where you can store and query its embeddings.
 
 Depending on your application, you will provision a vector database after a specific event (e.g., user signup, organization creation, or upgrade to paid tier). You will then track tenants and their associated vector databases in your application's main database. 
 
@@ -21,7 +21,7 @@ The main application's database consists of three tables: `documents`, `users`, 
 
 Then, each vector database that gets provisioned has an `embeddings` table for storing document chunks for retrieval-augmented generation (RAG).
 
-For this app, vector databases are provisioned when a user signs up. Once they upload a document, it gets chunked and stored in their dedicated vector database. Finally, once the user chats with their document, the vector similarity search runs against their database to retrieve the relevant information to beswer their prompt.
+For this app, vector databases are provisioned when a user signs up. Once they upload a document, it gets chunked and stored in their dedicated vector database. Finally, once the user chats with their document, the vector similarity search runs against their database to retrieve the relevant information to answer their prompt.
 
 <details>
   <summary>Code snippet example of provisioning a vector database</summary>
@@ -29,7 +29,8 @@ For this app, vector databases are provisioned when a user signs up. Once they u
    ![Provision Vector database for each signup](https://github.com/user-attachments/assets/01e31752-cddb-45c5-b595-92c3cb815a88)
 
   ```ts
-  // app/lib/auth.ts
+  // Code from app/lib/auth.ts
+
   // User email from Google Auth
 	const email = profile.emails[0].value;
 
@@ -132,7 +133,7 @@ For this app, vector databases are provisioned when a user signs up. Once they u
 ![Vector database per tenant RAG](https://github.com/user-attachments/assets/43e0f872-6bab-4a06-8208-7871723f1fd0)
 
   ```ts
-// /app/routes/api/document/chat
+// Code from app/routes/api/document/chat
 // Get the user's messages and the document ID from the request body.
 const {
 		messages,
@@ -222,7 +223,7 @@ const {
 
 While this approach is beneficial, it can also be challenging to implement. You need to manage each database's lifecycle, including provisioning, scaling, and de-provisioning. Fortunately, Postgres on Neon is set up differently:
 
-1. Postgres on Neon can be provisioned via the in ~2 seconds, making provisioning a Postgres database for every tenant possible. You wouldn't need to wait several minutes for the database to be ready.
+1. Postgres on Neon can be provisioned via the in ~2 seconds, making provisioning a Postgres database for every tenant possible. You don't need to wait several minutes for the database to be ready.
 2. The database's compute can automatically scale up to meet an application's workload and can shut down when the database is unused.
 
 <div align="left">
@@ -246,7 +247,6 @@ This makes the proposed pattern of creating a database per tenant not only possi
 
 You can check out the live version at https://ai-vector-db-per-tenant.pages.dev/. It's built using the following technologies:
 
-Tech stack:
 - [Neon](https://neon.tech/ref=github) - Fully managed Postgres
 - [Remix](https://remix.run) - Full-stack React framework
 - [Remix Auth](https://github.com/sergiodxa/remix-auth) - Authentication
