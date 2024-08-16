@@ -1,6 +1,6 @@
 ## AI app architecture: vector database per tenant
 
-This repo contains an example of a scalable architecture for AI-powered applications. On the surface, it's an AI app where users can upload PDFs and chat with them. However, under the hood, each user gets a dedicated vector database instance (Postgres on Neon with pgvector).
+This repo contains an example of a scalable architecture for AI-powered applications. On the surface, it's an AI app where users can upload PDFs and chat with them. However, under the hood, each user gets a dedicated vector database instance (Postgres on [Neon](https://neon.tech/?ref=github) with pgvector).
 
 You can check out the live version at https://ai-vector-db-per-tenant.pages.dev
 
@@ -264,6 +264,8 @@ This makes the proposed pattern of creating a database per tenant not only possi
 
 ## Conclusion
 
-While this pattern is useful in building AI applications, you can simply use it to provide each tenant with its own database. If you have any questions, feel free to reach out to the [Neon Discord](https://neon.tech/discord) or contact the [Neon Sales team](https://neon.tech/contact-sales). We'd love to hear from you.
+While this pattern is useful in building AI applications, you can simply use it to provide each tenant with its own database. You could also use a database other than Postgres for your main application's database (e.g., MySQL, MongoDB, MSSQL server, etc.). 
+
+If you have any questions, feel free to reach out to in the [Neon Discord](https://neon.tech/discord) or contact the [Neon Sales team](https://neon.tech/contact-sales). We'd love to hear from you.
 
 
