@@ -247,18 +247,9 @@ While this approach is beneficial, it can also be challenging to implement. You 
 1. Postgres on Neon can be provisioned via the in ~2 seconds, making provisioning a Postgres database for every tenant possible. You don't need to wait several minutes for the database to be ready.
 2. The database's compute can automatically scale up to meet an application's workload and can shut down when the database is unused.
 
-<div align="left">
-  <table>
-    <tr>
-      <td width="50%">
-        <video autoplay src="https://github.com/user-attachments/assets/96500fc3-3efa-4cfa-9339-81eb359ff105" width="100%"></video>
-      </td>
-      <td width="40%">
-        <img src="https://github.com/user-attachments/assets/7f093ead-d51b-46bc-a473-0df483d91c18" width="100%" alt="Autoscaling">
-      </td>
-    </tr>
-  </table>
-</div>
+https://github.com/user-attachments/assets/96500fc3-3efa-4cfa-9339-81eb359ff105
+
+![Autoscaling on Neon](https://github.com/user-attachments/assets/7f093ead-d51b-46bc-a473-0df483d91c18)
 
 This makes the proposed pattern of creating a database per tenant not only possible but also cost-effective.
 
