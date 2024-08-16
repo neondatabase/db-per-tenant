@@ -156,9 +156,12 @@ export const Upload = () => {
 							}}
 						>
 							<FileUpload className="size-10" />
-							<Button size="lg" variant="ghost">
-								Drag & drop or choose file to upload
+							<p>Drag & drop your PDF file here</p>
+							<p>or</p>
+							<Button size="lg" className="ml-2" variant="outline">
+								Choose file to upload
 							</Button>
+
 							<Text size="xs"> Maximum PDF file size is 10MB</Text>
 						</FileTrigger>
 					</DropZone>
