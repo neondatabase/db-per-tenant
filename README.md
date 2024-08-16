@@ -1,11 +1,11 @@
 ## Scaling Postgres for AI Applications: Vector Database per Tenant
 
-Rather than having all vector embeddings stored in a single Postgres database, you provide each tenant (could be a user, an organization, a workspace, or any other entity requiring isolation) with its own dedicated Postgres database instance where you can store and query their embeddings.
+Rather than having all vector embeddings stored in a single Postgres database, you provide each tenant (a user, an organization, a workspace, or any other entity requiring isolation) with its own dedicated Postgres database instance where you can store and query their embeddings.
 
-Depending on your application, you will provision a vector database after a certain event (e.g., user signup, organization creation, or upgrade to paid tier). You will then track tenants and their associated vector databases in your application's main database. 
+Depending on your application, you will provision a vector database after a specific event (e.g., user signup, organization creation, or upgrade to paid tier). You will then track tenants and their associated vector databases in your application's main database. 
 
 This approach offers several benefits:
-1. Each tenant's data is stored in a separate, isolated database that is not shared with other tenants. This makes it possible for you to be compliant with data residency requirements (e.g., GDPR)
+1. Each tenant's data is stored in a separate, isolated database not shared with other tenants. This makes it possible for you to be compliant with data residency requirements (e.g., GDPR)
 2. Database resources can be allocated based on each tenant's requirements. 
 3. A tenant with a large workload that can impact the database's performance won't affect other tenants; it would also be easier to manage.
 
@@ -13,7 +13,7 @@ Here's an example database architecture diagram of the [demo app](https://ai-vec
 
 ![Architecture Diagram](https://github.com/user-attachments/assets/c788d581-1d0a-4201-842e-a20bd498e3db)
 
-The main application's database consists of three main tables: `documents`, `users`, and `vector_databases`.
+The main application's database consists of three tables: `documents`, `users`, and `vector_databases`.
 
 - The `documents` table stores information about files, including their titles, sizes, and timestamps, and is linked to users via a foreign key.
 - The `users` table maintains user profiles, including names, emails, and avatar URLs.
@@ -21,7 +21,7 @@ The main application's database consists of three main tables: `documents`, `use
 
 Then, each vector database that gets provisioned has an `embeddings` table for storing document chunks for retrieval-augmented generation (RAG).
 
-For this app, vector databases are provisioned when a user signs up. Once they upload a document, it gets chunked and stored in their dedicated vector database. Finally, once the user chats with their document, the vector similarity search runs against their database to retrieve the relevant information to be able to answer their prompt.
+For this app, vector databases are provisioned when a user signs up. Once they upload a document, it gets chunked and stored in their dedicated vector database. Finally, once the user chats with their document, the vector similarity search runs against their database to retrieve the relevant information to beswer their prompt.
 
 <details>
   <summary>Code snippet example of provisioning a vector database</summary>
@@ -248,18 +248,18 @@ You can check out the live version at https://ai-vector-db-per-tenant.pages.dev/
 
 Tech stack:
 - [Neon](https://neon.tech/ref=github) - Fully managed Postgres
-- [Remix](https://remix.run) - full-stack React framework
-- [Remix Auth](https://github.com/sergiodxa/remix-auth) - authentication
+- [Remix](https://remix.run) - Full-stack React framework
+- [Remix Auth](https://github.com/sergiodxa/remix-auth) - Authentication
 - [Drizzle ORM](https://drizzle.team/) - TypeScript ORM
 - [Cloudflare Pages](https://pages.dev) - Deployment Platform
 - [Vercel AI SDK](sdk.vercel.ai/) -  TypeScript toolkit for building AI-powered applications
 - [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) - Object storage
 - [OpenAI](https://openai.com) with gpt-4o-mini - LLM
 - [Upstash](https://upstash.com) - Redis for rate limiting
-- [Langchain](https://js.langchain.com/v0.2/docs/introduction/) - a framework for developing applications powered by large language models (LLMs)
+- [Langchain](https://js.langchain.com/v0.2/docs/introduction/) - Framework for developing applications powered by large language models (LLMs)
 
 ## Conclusion
 
-While this pattern is useful in building AI applications, you can simply use it to provide each tenant with its own database. If you have any questions, feel free to reach out in the [Neon Discord](https://neon.tech/discord) or to contact the [Neon Sales team](https://neon.tech/contact-sales). We'd love to hear from you.
+While this pattern is useful in building AI applications, you can simply use it to provide each tenant with its own database. If you have any questions, feel free to reach out to the [Neon Discord](https://neon.tech/discord) or contact the [Neon Sales team](https://neon.tech/contact-sales). We'd love to hear from you.
 
 
