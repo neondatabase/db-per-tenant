@@ -1,4 +1,25 @@
-## Scaling Postgres for AI Applications: vector database per tenant
+## AI app architecture: vector database per tenant
+
+This repo contains an example of a scalable architecture for AI-powered applications. On the surface, it's an AI app where users can upload PDFs and chat with them. However, under the hood, each user gets a dedicated vector database instance (Postgres on Neon with pgvector).
+
+You can check out the live version at https://ai-vector-db-per-tenant.pages.dev
+
+![Demo app](https://github.com/user-attachments/assets/d9dee48f-a6d6-4dd5-bb89-fa5d31ca26e3)
+
+The app is built using the following technologies:
+
+- [Neon](https://neon.tech/ref=github) - Fully managed Postgres
+- [Remix](https://remix.run) - Full-stack React framework
+- [Remix Auth](https://github.com/sergiodxa/remix-auth) - Authentication
+- [Drizzle ORM](https://drizzle.team/) - TypeScript ORM
+- [Cloudflare Pages](https://pages.dev) - Deployment Platform
+- [Vercel AI SDK](sdk.vercel.ai/) -  TypeScript toolkit for building AI-powered applications
+- [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) - Object storage
+- [OpenAI](https://openai.com) with gpt-4o-mini - LLM
+- [Upstash](https://upstash.com) - Redis for rate limiting
+- [Langchain](https://js.langchain.com/v0.2/docs/introduction/) - Framework for developing applications powered by large language models (LLMs)
+
+## How it works
 
 Rather than having all vector embeddings stored in a single Postgres database, you provide each tenant (a user, an organization, a workspace, or any other entity requiring isolation) with its own dedicated Postgres database instance where you can store and query its embeddings.
 
@@ -9,7 +30,7 @@ This approach offers several benefits:
 2. Database resources can be allocated based on each tenant's requirements. 
 3. A tenant with a large workload that can impact the database's performance won't affect other tenants; it would also be easier to manage.
 
-Here's an example database architecture diagram of the [demo app](https://ai-vector-db-per-tenant.pages.dev/) that's in this repo. On the surface, it's an app where users can upload PDFs and chat with them. However, under the hood, each user gets a dedicated vector database instance:
+Here's the database architecture diagram of the demo app that's in this repo:
 
 ![Architecture Diagram](https://github.com/user-attachments/assets/c788d581-1d0a-4201-842e-a20bd498e3db)
 
@@ -240,23 +261,6 @@ While this approach is beneficial, it can also be challenging to implement. You 
 </div>
 
 This makes the proposed pattern of creating a database per tenant not only possible but also cost-effective.
-
-## Demo app
-
-![Demo app](https://github.com/user-attachments/assets/d9dee48f-a6d6-4dd5-bb89-fa5d31ca26e3)
-
-You can check out the live version at https://ai-vector-db-per-tenant.pages.dev/. It's built using the following technologies:
-
-- [Neon](https://neon.tech/ref=github) - Fully managed Postgres
-- [Remix](https://remix.run) - Full-stack React framework
-- [Remix Auth](https://github.com/sergiodxa/remix-auth) - Authentication
-- [Drizzle ORM](https://drizzle.team/) - TypeScript ORM
-- [Cloudflare Pages](https://pages.dev) - Deployment Platform
-- [Vercel AI SDK](sdk.vercel.ai/) -  TypeScript toolkit for building AI-powered applications
-- [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) - Object storage
-- [OpenAI](https://openai.com) with gpt-4o-mini - LLM
-- [Upstash](https://upstash.com) - Redis for rate limiting
-- [Langchain](https://js.langchain.com/v0.2/docs/introduction/) - Framework for developing applications powered by large language models (LLMs)
 
 ## Conclusion
 
