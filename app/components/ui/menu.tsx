@@ -37,7 +37,7 @@ const MenuContent = <T extends object>({
 		<ReactAriaPopover
 			className={cn(
 				// Base
-				"min-w-[150px] isolate w-max rounded-xl overflow-auto border border-muted bg-white dark:bg-muted-element p-1 backdrop-blur-xl shadow-lg dark:ring-inset",
+				"min-w-[150px] isolate w-max rounded-xl overflow-auto border border-muted bg-muted-element p-1 backdrop-blur-xl shadow-lg ring-inset",
 				// Entering
 				"entering:animate-in entering:fade-in",
 				// Exiting
