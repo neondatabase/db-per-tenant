@@ -25,6 +25,7 @@ For this app, vector databases are provisioned when a user signs up. Once they u
 
 <details>
   <summary>Code snippet example of provisioning a vector database</summary>
+   
    ![Provision Vector database for each signup](https://github.com/user-attachments/assets/01e31752-cddb-45c5-b595-92c3cb815a88)
 
   ```ts
@@ -69,9 +70,8 @@ For this app, vector databases are provisioned when a user signs up. Once they u
 			const vectorDbConnectionUri = data.connection_uris[0]?.connection_uri;
 
 			const sql = neon(vectorDbConnectionUri);
-			// Create the vector extension and table
-			await sql`CREATE EXTENSION IF NOT EXISTS vector;`;
 
+			// Create the vector extension and table
 			await sql.transaction([
 				sql`CREATE EXTENSION IF NOT EXISTS vector;`,
 				sql`CREATE TABLE IF NOT EXISTS "embeddings" (
@@ -128,6 +128,7 @@ For this app, vector databases are provisioned when a user signs up. Once they u
 
 <details>
   <summary>Code snippet and diagram of RAG</summary>
+	
 ![Vector database per tenant RAG](https://github.com/user-attachments/assets/43e0f872-6bab-4a06-8208-7871723f1fd0)
 
   ```ts
@@ -243,7 +244,7 @@ This makes the proposed pattern of creating a database per tenant not only possi
 
 ![Demo app](https://github.com/user-attachments/assets/d9dee48f-a6d6-4dd5-bb89-fa5d31ca26e3)
 
-You can check out the live version at https://ai-vector-db-per-tenant.pages.dev/). It's built using the following technologies:
+You can check out the live version at https://ai-vector-db-per-tenant.pages.dev/. It's built using the following technologies:
 
 Tech stack:
 - [Neon](https://neon.tech/ref=github) - Fully managed Postgres
