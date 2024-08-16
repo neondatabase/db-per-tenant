@@ -1,69 +1,31 @@
-## Making Postgres scalable for AI apps: vector database per tenant
+## Scaling Postgres for AI Applications: Vector Database per Tenant
 
-Rather than having all vector embeddings stored in a single Postgres database, you give each tenant (could be a user, an organization, a workspace, or any other entity requiring isolation) its own dedicated vector database instance. 
+Rather than having all vector embeddings stored in a single Postgres database, you provide each tenant (could be a user, an organization, a workspace, or any other entity requiring isolation) with its own dedicated Postgres database instance where you can store and query their embeddings.
 
-Depending on your application, you will provision these databases after a certain event (e.g., a user signs up, an organization is created, a user upgrades from free to paid, etc.)
-
-You will then need to keep track of the different tenants and the vector databases that belong to them in your application's database. Here's an example database architecture diagram of the demo app that's in this repo:
-
-![Architecture Diagram](https://github.com/user-attachments/assets/c788d581-1d0a-4201-842e-a20bd498e3db)
+Depending on your application, you will provision a vector database after a certain event (e.g., user signup, organization creation, or upgrade to paid tier). You will then track tenants and their associated vector databases in your application's main database. 
 
 This approach offers several benefits:
 1. Each tenant's data is stored in a separate, isolated database that is not shared with other tenants. This makes it possible for you to be compliant with data residency requirements (e.g., GDPR)
 2. Database resources can be allocated based on each tenant's requirements. 
 3. A tenant with a large workload that can impact the database's performance won't affect other tenants; it would also be easier to manage.
 
-While this approach is beneficial, it can also be challenging to implement. You need to manage each database's lifecycle, including provisioning, scaling, and de-provisioning. Fortunately, Postgres on Neon is set up differently:
+Here's an example database architecture diagram of the [demo app](https://ai-vector-db-per-tenant.pages.dev/) that's in this repo. On the surface, it's an app where users can upload PDFs and chat with them. However, under the hood, each user gets a dedicated vector database instance:
 
-1. Postgres on Neon can be provisioned via the in ~2 seconds, making provisioning a Postgres database for every tenant possible. You wouldn't need to wait several minutes for the database to be ready.
-2. The database's compute can automatically scale up to meet an application's workload and can shut down when the database is unused.
+![Architecture Diagram](https://github.com/user-attachments/assets/c788d581-1d0a-4201-842e-a20bd498e3db)
 
-<div align="left">
-  <table>
-    <tr>
-      <td width="50%">
-        <video autoplay src="https://github.com/user-attachments/assets/96500fc3-3efa-4cfa-9339-81eb359ff105" width="100%"></video>
-      </td>
-      <td width="40%">
-        <img src="https://github.com/user-attachments/assets/7f093ead-d51b-46bc-a473-0df483d91c18" width="100%" alt="Autoscaling">
-      </td>
-    </tr>
-  </table>
-</div>
+The main application's database consists of three main tables: `documents`, `users`, and `vector_databases`.
 
-This makes the proposed pattern of creating a database per tenant not only possible, but also cost-effective.
+- The `documents` table stores information about files, including their titles, sizes, and timestamps, and is linked to users via a foreign key.
+- The `users` table maintains user profiles, including names, emails, and avatar URLs.
+- The `vector_databases` table tracks which vector database belongs to which user.
 
-## Example app in action: chat-with-pdf
+Then, each vector database that gets provisioned has an `embeddings` table for storing document chunks for retrieval-augmented generation (RAG).
 
-![Demo app](https://github.com/user-attachments/assets/d9dee48f-a6d6-4dd5-bb89-fa5d31ca26e3)
-
-You can check out the [live version](https://ai-vector-db-per-tenant.pages.dev/) of the demo app that's in this repo. On the surface, it's an app where users can upload PDFs and chat with them. However, under the hood, each user gets a dedicated vector database instance. 
-
-
-It's built using the following technologies:
-
-Tech stack:
-- [Neon](https://neon.tech/ref=github) - Fully managed Postgres
-- [Remix](https://remix.run) - full-stack React framework
-- [Remix Auth](https://github.com/sergiodxa/remix-auth) - authentication
-- [Drizzle ORM](https://drizzle.team/) - TypeScript ORM
-- [Cloudflare Pages](https://pages.dev) - Deployment Platform
-- [Vercel AI SDK](sdk.vercel.ai/) -  TypeScript toolkit for building AI-powered applications
-- [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) - Object storage
-- [OpenAI](https://openai.com) with gpt-4o-mini - LLM
-- [Upstash](https://upstash.com) - Redis for ratelimiting
-- [Langchain](https://js.langchain.com/v0.2/docs/introduction/) - a framework for developing applications powered by large language models (LLMs)
-
-Here's an overview of the app works:
-
-### How the demo works: provisioning a vector database for each user
-
-Every time a user signs up, we provision a Neon database and map it to their user. 
-
-![Provision Vector database for each signup](https://github.com/user-attachments/assets/01e31752-cddb-45c5-b595-92c3cb815a88)
+For this app, vector databases are provisioned when a user signs up. Once they upload a document, it gets chunked and stored in their dedicated vector database. Finally, once the user chats with their document, the vector similarity search runs against their database to retrieve the relevant information to be able to answer their prompt.
 
 <details>
-  <summary>Code snippet example</summary>
+  <summary>Code snippet example of provisioning a vector database</summary>
+   ![Provision Vector database for each signup](https://github.com/user-attachments/assets/01e31752-cddb-45c5-b595-92c3cb815a88)
 
   ```ts
   // app/lib/auth.ts
@@ -163,14 +125,10 @@ Every time a user signs up, we provision a Neon database and map it to their use
   ```
 </details>
 
-### How the app works: RAG
-
-Once the user uploads a document, we ingest it and store it in the database associated with them. Next, once the user chats with their document, the vector similarity search runs against their database to retrieve the relevant information to be able to answer their prompt.
-
-![Vector database per tenant RAG](https://github.com/user-attachments/assets/43e0f872-6bab-4a06-8208-7871723f1fd0)
 
 <details>
-  <summary>Code snippet</summary>
+  <summary>Code snippet and diagram of RAG</summary>
+![Vector database per tenant RAG](https://github.com/user-attachments/assets/43e0f872-6bab-4a06-8208-7871723f1fd0)
 
   ```ts
 // /app/routes/api/document/chat
@@ -260,8 +218,47 @@ const {
   ```
 </details>
 
+
+While this approach is beneficial, it can also be challenging to implement. You need to manage each database's lifecycle, including provisioning, scaling, and de-provisioning. Fortunately, Postgres on Neon is set up differently:
+
+1. Postgres on Neon can be provisioned via the in ~2 seconds, making provisioning a Postgres database for every tenant possible. You wouldn't need to wait several minutes for the database to be ready.
+2. The database's compute can automatically scale up to meet an application's workload and can shut down when the database is unused.
+
+<div align="left">
+  <table>
+    <tr>
+      <td width="50%">
+        <video autoplay src="https://github.com/user-attachments/assets/96500fc3-3efa-4cfa-9339-81eb359ff105" width="100%"></video>
+      </td>
+      <td width="40%">
+        <img src="https://github.com/user-attachments/assets/7f093ead-d51b-46bc-a473-0df483d91c18" width="100%" alt="Autoscaling">
+      </td>
+    </tr>
+  </table>
+</div>
+
+This makes the proposed pattern of creating a database per tenant not only possible but also cost-effective.
+
+## Demo app
+
+![Demo app](https://github.com/user-attachments/assets/d9dee48f-a6d6-4dd5-bb89-fa5d31ca26e3)
+
+You can check out the live version at https://ai-vector-db-per-tenant.pages.dev/). It's built using the following technologies:
+
+Tech stack:
+- [Neon](https://neon.tech/ref=github) - Fully managed Postgres
+- [Remix](https://remix.run) - full-stack React framework
+- [Remix Auth](https://github.com/sergiodxa/remix-auth) - authentication
+- [Drizzle ORM](https://drizzle.team/) - TypeScript ORM
+- [Cloudflare Pages](https://pages.dev) - Deployment Platform
+- [Vercel AI SDK](sdk.vercel.ai/) -  TypeScript toolkit for building AI-powered applications
+- [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) - Object storage
+- [OpenAI](https://openai.com) with gpt-4o-mini - LLM
+- [Upstash](https://upstash.com) - Redis for rate limiting
+- [Langchain](https://js.langchain.com/v0.2/docs/introduction/) - a framework for developing applications powered by large language models (LLMs)
+
 ## Conclusion
 
-While this pattern is useful in building AI applications, you can simply use it to provide each tenant with its own database. If you have any questions, feel free to reach out in the [Neon Discord](https://neon.tech/discord) or to get in touch with the [Neon Sales team](https://neon.tech/contact-sales). We'd love to hear from you.
+While this pattern is useful in building AI applications, you can simply use it to provide each tenant with its own database. If you have any questions, feel free to reach out in the [Neon Discord](https://neon.tech/discord) or to contact the [Neon Sales team](https://neon.tech/contact-sales). We'd love to hear from you.
 
 
