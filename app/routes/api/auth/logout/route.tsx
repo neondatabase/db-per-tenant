@@ -1,5 +1,6 @@
-import type { ActionFunctionArgs } from "@remix-run/cloudflare";
+import type { ActionFunctionArgs } from "@remix-run/node";
+import { authenticator } from "~/lib/auth";
 
-export async function action({ request, context }: ActionFunctionArgs) {
-	await context.auth.authenticator.logout(request, { redirectTo: "/login" });
+export async function action({ request }: ActionFunctionArgs) {
+	await authenticator.logout(request, { redirectTo: "/login" });
 }

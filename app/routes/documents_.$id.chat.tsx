@@ -1,6 +1,6 @@
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { json, redirect, type LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { eq } from "drizzle-orm";
 import { Button } from "../components/ui/button";
@@ -12,22 +12,20 @@ import { User } from "../components/icons/user";
 import { documents } from "../lib/db/schema";
 import { useChat } from "ai/react";
 import { Input } from "../components/ui/input";
+import { authenticator } from "~/lib/auth";
+import { db } from "~/lib/db";
 
-export const loader = async ({
-	context,
-	request,
-	params,
-}: LoaderFunctionArgs) => {
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 	const documentId = params.id as string;
 
 	try {
-		const user = await context.auth.authenticator.isAuthenticated(request);
+		const user = await authenticator.isAuthenticated(request);
 
 		if (!user) {
 			return redirect("/login");
 		}
 
-		const document = await context.db
+		const document = await db
 			.select()
 			.from(documents)
 			.where(eq(documents.documentId, documentId));
@@ -35,14 +33,14 @@ export const loader = async ({
 		const url = await getSignedUrl(
 			new S3Client({
 				region: "auto",
-				endpoint: `https://${context.cloudflare.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+				endpoint: `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
 				credentials: {
-					accessKeyId: context.cloudflare.env.CLOUDFLARE_R2_ACCESS_ID,
-					secretAccessKey: context.cloudflare.env.CLOUDFLARE_R2_SECRET_KEY,
+					accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_ID,
+					secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_KEY,
 				},
 			}),
 			new GetObjectCommand({
-				Bucket: context.cloudflare.env.CLOUDFLARE_R2_BUCKET_NAME,
+				Bucket: process.env.CLOUDFLARE_R2_BUCKET_NAME,
 				Key: document[0].fileName,
 			}),
 			{

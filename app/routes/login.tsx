@@ -1,24 +1,25 @@
-import { type LoaderFunctionArgs, json } from "@remix-run/cloudflare";
+import { type LoaderFunctionArgs, json } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 import { Button } from "../components/ui/button";
 import { Google } from "../components/icons/google";
+import { authenticator } from "~/lib/auth";
+import { commitSession, getSession } from "~/lib/auth/session.server";
 
-export async function loader({ context, request }: LoaderFunctionArgs) {
-	await context.auth.authenticator.isAuthenticated(request, {
+export async function loader({ request }: LoaderFunctionArgs) {
+	await authenticator.isAuthenticated(request, {
 		successRedirect: "/documents",
 	});
-	const session = await context.auth.sessionStorage.getSession(
-		request.headers.get("cookie"),
-	);
 
-	const error = session.get(context.auth.authenticator.sessionErrorKey);
+	const session = await getSession(request.headers.get("cookie"));
+
+	const error = session.get(authenticator.sessionErrorKey);
 
 	console.log("error", error);
 	return json(
 		{ error },
 		{
 			headers: {
-				"Set-Cookie": await context.auth.sessionStorage.commitSession(session), // You must commit the session whenever you read a flash
+				"Set-Cookie": await commitSession(session), // You must commit the session whenever you read a flash
 			},
 		},
 	);

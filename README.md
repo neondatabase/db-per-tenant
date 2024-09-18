@@ -12,7 +12,7 @@ The app is built using the following technologies:
 - [Remix](https://remix.run) - Full-stack React framework
 - [Remix Auth](https://github.com/sergiodxa/remix-auth) - Authentication
 - [Drizzle ORM](https://drizzle.team/) - TypeScript ORM
-- [Cloudflare Pages](https://pages.dev) - Deployment Platform
+- [Railway](https://railway.app) - Deployment Platform
 - [Vercel AI SDK](sdk.vercel.ai/) -  TypeScript toolkit for building AI-powered applications
 - [Cloudflare R2](https://www.cloudflare.com/developer-platform/r2/) - Object storage
 - [OpenAI](https://openai.com) with gpt-4o-mini - LLM
@@ -52,98 +52,90 @@ For this app, vector databases are provisioned when a user signs up. Once they u
   ```ts
   // Code from app/lib/auth.ts
 
-  // User email from Google Auth
-	const email = profile.emails[0].value;
+  authenticator.use(
+	new GoogleStrategy(
+		{
+			clientID: process.env.GOOGLE_CLIENT_ID,
+			clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+			callbackURL: process.env.GOOGLE_CALLBACK_URL,
+		},
+		async ({ profile }) => {
+			const email = profile.emails[0].value;
 
-	try {
-		const db = createDbClient(env.DATABASE_URL);
+			try {
+				const userData = await db
+					.select({
+						user: users,
+						vectorDatabase: vectorDatabases,
+					})
+					.from(users)
+					.leftJoin(vectorDatabases, eq(users.id, vectorDatabases.userId))
+					.where(eq(users.email, email));
 
-		// Get the user and their vector database
-		const userData = await db
-			.select({
-				user: users,
-				vectorDatabase: vectorDatabases,
-			})
-			.from(users)
-			.leftJoin(vectorDatabases, eq(users.id, vectorDatabases.userId))
-			.where(eq(users.email, email));
+				if (
+					userData.length === 0 ||
+					!userData[0].vectorDatabase ||
+					!userData[0].user
+				) {
+					const { data, error } = await neonApiClient.POST("/projects", {
+						body: {
+							project: {},
+						},
+					});
 
-		// If the user does not exist, create a new user and vector database
-		if (
-			userData.length === 0 ||
-			!userData[0].vectorDatabase ||
-			!userData[0].user
-		) {
-			// Create a new Neon project
-			const neonApiClient = createNeonApiClient(env.NEON_API_KEY);
+					if (error) {
+						throw new Error(`Failed to create Neon project, ${error}`);
+					}
 
-			const { data, error } = await neonApiClient.POST("/projects", {
-				body: {
-					project: {},
-				},
-			});
+					const vectorDbId = data?.project.id;
 
-			if (error) {
-				throw new Error(`Failed to create Neon project, ${error}`);
+					const vectorDbConnectionUri = data.connection_uris[0]?.connection_uri;
+
+					const sql = postgres(vectorDbConnectionUri);
+
+					await sql`CREATE EXTENSION IF NOT EXISTS vector;`;
+
+					await migrate(drizzle(sql), { migrationsFolder: "./drizzle" });
+
+					const newUser = await db
+						.insert(users)
+						.values({
+							email,
+							name: profile.displayName,
+							avatarUrl: profile.photos[0].value,
+							userId: generateId({ object: "user" }),
+						})
+						.onConflictDoNothing()
+						.returning();
+
+					await db
+						.insert(vectorDatabases)
+						.values({
+							vectorDbId,
+							userId: newUser[0].id,
+						})
+						.returning();
+
+					const result = {
+						...newUser[0],
+						vectorDbId,
+					};
+
+					return result;
+				}
+
+				return {
+					...userData[0].user,
+					vectorDbId: userData[0].vectorDatabase.vectorDbId,
+				};
+			} catch (error) {
+				console.error("User creation error:", error);
+				throw new Error(getErrorMessage(error));
 			}
+		},
+	),
+);
 
-			const vectorDbId = data?.project.id;
-
-			const vectorDbConnectionUri = data.connection_uris[0]?.connection_uri;
-
-			const sql = neon(vectorDbConnectionUri);
-
-			// Create the vector extension and table
-			await sql.transaction([
-				sql`CREATE EXTENSION IF NOT EXISTS vector;`,
-				sql`CREATE TABLE IF NOT EXISTS "embeddings" (
-					"id" serial PRIMARY KEY NOT NULL,
-					"content" text NOT NULL,
-					"metadata" jsonb NOT NULL,
-					"embedding" vector(1536),
-					"created_at" timestamp with time zone DEFAULT now(),
-					"updated_at" timestamp with time zone DEFAULT now()
-				)`,
-				sql`CREATE INDEX IF NOT EXISTS "embedding_idx" ON "embeddings" USING hnsw ("embedding" vector_cosine_ops)`,
-			]);
-
-			// Create the user and vector database and store it in the application's database
-			const newUser = await db
-				.insert(users)
-				.values({
-					email,
-					name: profile.displayName,
-					avatarUrl: profile.photos[0].value,
-					userId: generateId({ object: "user" }),
-				})
-				.onConflictDoNothing()
-				.returning();
-
-			await db
-				.insert(vectorDatabases)
-				.values({
-					vectorDbId,
-					userId: newUser[0].id,
-				})
-				.returning();
-
-			const result = {
-				...newUser[0],
-				vectorDbId,
-			};
-
-			return result;
-		}
-		
-		// Return the user and their vector database if they already exist
-		return {
-			...userData[0].user,
-			vectorDbId: userData[0].vectorDatabase.vectorDbId,
-		};
-	} catch (error) {
-		console.error("User creation error:", error);
-		throw new Error(getErrorMessage(error));
-	}
   ```
 </details>
 
@@ -164,14 +156,8 @@ const {
 		documentId: string;
 	} = await request.json();
 
-	// Get the user's prompt
 	const { content: prompt } = messages[messages.length - 1];
 
-	const neonApiClient = createNeonApiClient(
-		context.cloudflare.env.NEON_API_KEY,
-	);
-
-	// Get the user's vector database's connection string by passing the user's vector database ID to the Neon API.
 	const { data, error } = await neonApiClient.GET(
 		"/projects/{project_id}/connection_uri",
 		{
@@ -194,7 +180,7 @@ const {
 	}
 
 	const embeddings = new OpenAIEmbeddings({
-		apiKey: context.cloudflare.env.OPENAI_API_KEY,
+		apiKey: process.env.OPENAI_API_KEY,
 		dimensions: 1536,
 		model: "text-embedding-3-small",
 	});
@@ -208,15 +194,13 @@ const {
 			vectorColumnName: "embedding",
 		},
 	});
-// Search for the most similar document chunks to the user's prompt in the vector database. 
-// Under the hood, Langchain converts the user's prompt to a vector using the OpenAI embeddings model and then searches for the most similar vectors in the vector database.
+
 	const result = await vectorStore.similaritySearch(prompt, 2, {
 		documentId,
 	});
 
-
 	const model = new ChatOpenAI({
-		apiKey: context.cloudflare.env.OPENAI_API_KEY,
+		apiKey: process.env.OPENAI_API_KEY,
 		model: "gpt-4o-mini",
 		temperature: 0,
 	});
@@ -234,7 +218,7 @@ const {
 	);
 
 	allMessages.push(systemMessage);
-// Generate a response by passing the user's messages and the additional context to the OpenAI model.
+
 	const stream = await model.stream(allMessages);
 
 	return LangChainAdapter.toDataStreamResponse(stream);

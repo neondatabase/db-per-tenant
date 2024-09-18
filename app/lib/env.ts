@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const EnvSchema = z.object({
+export const envSchema = z.object({
 	DATABASE_URL: z.string(),
 	// Neon
 	NEON_API_KEY: z.string(),
@@ -23,4 +23,6 @@ export const EnvSchema = z.object({
 	OPENAI_API_KEY: z.string(),
 });
 
-export type Env = z.infer<typeof EnvSchema>;
+export type Env = z.infer<typeof envSchema>;
+
+// export const env = envSchema.parse(process.env);

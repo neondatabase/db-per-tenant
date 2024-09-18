@@ -8,18 +8,20 @@ import {
 } from "@remix-run/react";
 import "./styles/globals.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { json, type LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { json, type LoaderFunctionArgs } from "@remix-run/node";
 
 import { Navbar } from "./components/layout/navbar";
 import type { User } from "./lib/db/schema";
 import { GenericErrorBoundary } from "./components/misc/error-boundary";
 import { Toaster } from "sonner";
+import { authenticator } from "./lib/auth";
 
 const queryClient = new QueryClient();
 
-export const loader = async ({ request, context }: LoaderFunctionArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
 	try {
-		const user = await context.auth.authenticator.isAuthenticated(request);
+		const user = await authenticator.isAuthenticated(request);
+
 		return json({ user });
 	} catch (error) {
 		console.error(error);

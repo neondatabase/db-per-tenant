@@ -1,18 +1,20 @@
-import { type ActionFunctionArgs, json } from "@remix-run/cloudflare";
+import { type ActionFunctionArgs, json } from "@remix-run/node";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { documents } from "../../../../lib/db/schema";
 import { count, eq } from "drizzle-orm";
 import { MAX_FILE_COUNT, MAX_FILE_SIZE } from "../../../../lib/constants";
 import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis/cloudflare";
+import { Redis } from "@upstash/redis";
+import { authenticator } from "~/lib/auth";
+import { db } from "~/lib/db";
 
-export const action = async ({ context, request }: ActionFunctionArgs) => {
+export const action = async ({ request }: ActionFunctionArgs) => {
 	const ip = request.headers.get("CF-Connecting-IP");
 	const identifier = ip ?? "global";
 
 	const ratelimit = new Ratelimit({
-		redis: Redis.fromEnv(context.cloudflare.env),
+		redis: Redis.fromEnv(),
 		limiter: Ratelimit.fixedWindow(10, "60 s"),
 		analytics: true,
 	});
@@ -33,7 +35,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 			},
 		);
 	}
-	const user = await context.auth.authenticator.isAuthenticated(request);
+	const user = await authenticator.isAuthenticated(request);
 
 	if (!user) {
 		return json(
@@ -44,7 +46,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 		);
 	}
 
-	const userDocuments = await context.db
+	const userDocuments = await db
 		.select({ count: count() })
 		.from(documents)
 		.where(eq(documents.userId, user.id));
@@ -79,14 +81,14 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 		const url = await getSignedUrl(
 			new S3Client({
 				region: "auto",
-				endpoint: `https://${context.cloudflare.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+				endpoint: `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
 				credentials: {
-					accessKeyId: context.cloudflare.env.CLOUDFLARE_R2_ACCESS_ID,
-					secretAccessKey: context.cloudflare.env.CLOUDFLARE_R2_SECRET_KEY,
+					accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_ID,
+					secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_KEY,
 				},
 			}),
 			new PutObjectCommand({
-				Bucket: context.cloudflare.env.CLOUDFLARE_R2_BUCKET_NAME,
+				Bucket: process.env.CLOUDFLARE_R2_BUCKET_NAME,
 				Key: key,
 				ContentLength: fileSize, // Set the expected content length
 			}),

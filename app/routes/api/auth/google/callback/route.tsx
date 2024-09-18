@@ -1,7 +1,8 @@
-import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import type { LoaderFunctionArgs } from "@remix-run/node";
+import { authenticator } from "~/lib/auth";
 
-export const loader = ({ request, context }: LoaderFunctionArgs) => {
-	return context.auth.authenticator.authenticate("google", request, {
+export const loader = ({ request }: LoaderFunctionArgs) => {
+	return authenticator.authenticate("google", request, {
 		successRedirect: "/documents",
 		failureRedirect: "/login",
 	});

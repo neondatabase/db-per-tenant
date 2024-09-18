@@ -1,4 +1,0 @@
-#:schema node_modules/wrangler/config-schema.json
-name = "ai-vector-db-per-tenant"
-compatibility_date = "2024-08-06"
-pages_build_output_dir = "./build/client"

@@ -3,12 +3,13 @@ import {
 	type LoaderFunctionArgs,
 	type MetaFunction,
 	redirect,
-} from "@remix-run/cloudflare";
-import { Form, Link } from "@remix-run/react";
+} from "@remix-run/node";
+import { Form } from "@remix-run/react";
 
 import { Github } from "../components/icons/github";
 import { Google } from "../components/icons/google";
 import { Button } from "../components/ui/button";
+import { authenticator } from "~/lib/auth";
 
 export const meta: MetaFunction = () => {
 	return [
@@ -20,8 +21,8 @@ export const meta: MetaFunction = () => {
 	];
 };
 
-export async function loader({ request, context }: LoaderFunctionArgs) {
-	const user = await context.auth.authenticator.isAuthenticated(request);
+export async function loader({ request }: LoaderFunctionArgs) {
+	const user = await authenticator.isAuthenticated(request);
 
 	if (user) {
 		return redirect("/documents");

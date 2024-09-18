@@ -1,4 +1,4 @@
-import { type ActionFunctionArgs, json } from "@remix-run/cloudflare";
+import { type ActionFunctionArgs, json } from "@remix-run/node";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { LangChainAdapter, type Message } from "ai";
 import {
@@ -7,12 +7,14 @@ import {
 	SystemMessage,
 } from "@langchain/core/messages";
 import { NeonPostgres } from "@langchain/community/vectorstores/neon";
-import { createNeonApiClient } from "../../../../lib/vector-db";
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis/cloudflare";
 
-export const action = async ({ context, request }: ActionFunctionArgs) => {
-	const user = await context.auth.authenticator.isAuthenticated(request);
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import { authenticator } from "~/lib/auth";
+import { neonApiClient } from "~/lib/vector-db";
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+	const user = await authenticator.isAuthenticated(request);
 
 	if (!user) {
 		return json(
@@ -26,7 +28,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 	const identifier = ip ?? "global";
 
 	const ratelimit = new Ratelimit({
-		redis: Redis.fromEnv(context.cloudflare.env),
+		redis: Redis.fromEnv(),
 		limiter: Ratelimit.fixedWindow(10, "60 s"),
 		analytics: true,
 	});
@@ -58,10 +60,6 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 
 	const { content: prompt } = messages[messages.length - 1];
 
-	const neonApiClient = createNeonApiClient(
-		context.cloudflare.env.NEON_API_KEY,
-	);
-
 	const { data, error } = await neonApiClient.GET(
 		"/projects/{project_id}/connection_uri",
 		{
@@ -84,7 +82,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 	}
 
 	const embeddings = new OpenAIEmbeddings({
-		apiKey: context.cloudflare.env.OPENAI_API_KEY,
+		apiKey: process.env.OPENAI_API_KEY,
 		dimensions: 1536,
 		model: "text-embedding-3-small",
 	});
@@ -104,7 +102,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 	});
 
 	const model = new ChatOpenAI({
-		apiKey: context.cloudflare.env.OPENAI_API_KEY,
+		apiKey: process.env.OPENAI_API_KEY,
 		model: "gpt-4o-mini",
 		temperature: 0,
 	});

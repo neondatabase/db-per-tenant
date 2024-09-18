@@ -1,4 +1,4 @@
-import { json, redirect, type LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, Link, useLoaderData } from "@remix-run/react";
 import { desc, eq } from "drizzle-orm";
 import { Plus } from "../components/icons/plus";
@@ -8,16 +8,18 @@ import { Heading } from "../components/ui/heading";
 import { Upload as DocumentUploader } from "../components/documents/upload";
 import { formatDistanceToNowStrict } from "date-fns";
 import { MAX_FILE_COUNT } from "../lib/constants";
+import { authenticator } from "~/lib/auth";
+import { db } from "~/lib/db";
 
-export async function loader({ context, request }: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs) {
 	try {
-		const user = await context.auth.authenticator.isAuthenticated(request);
+		const user = await authenticator.isAuthenticated(request);
 
 		if (!user) {
 			return redirect("/login");
 		}
 
-		const allDocuments = await context.db
+		const allDocuments = await db
 			.select()
 			.from(documents)
 			.where(eq(documents.userId, user.id))
