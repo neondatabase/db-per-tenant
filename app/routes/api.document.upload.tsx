@@ -1,9 +1,9 @@
 import { type ActionFunctionArgs, json } from "@remix-run/node";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { documents } from "../../../../lib/db/schema";
+import { documents } from "../lib/db/schema";
 import { count, eq } from "drizzle-orm";
-import { MAX_FILE_COUNT, MAX_FILE_SIZE } from "../../../../lib/constants";
+import { MAX_FILE_COUNT, MAX_FILE_SIZE } from "../lib/constants";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { authenticator } from "~/lib/auth";

@@ -14,7 +14,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const error = session.get(authenticator.sessionErrorKey);
 
-	console.log("error", error);
 	return json(
 		{ error },
 		{
