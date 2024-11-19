@@ -2,7 +2,7 @@
 
 This repo contains an example of a scalable architecture for AI-powered applications. On the surface, it's an AI app where users can upload PDFs and chat with them. However, under the hood, each user gets a dedicated vector database instance (Postgres on [Neon](https://neon.tech/?ref=github) with pgvector).
 
-You can check out the live version at https://ai-vector-db-per-tenant.pages.dev
+You can check out the live version at https://db-per-tenant.up.railway.app/
 
 ![Demo app](https://github.com/user-attachments/assets/d9dee48f-a6d6-4dd5-bb89-fa5d31ca26e3)
 
